@@ -147,6 +147,6 @@ real-time-stocks-pipeline/
 
 **Author**: *Tchindje Eric* 
 
-**LinkedIn**: [username](https://www.linkedin.com/in/eric-tchindje/) 
+**LinkedIn**: [tchindje](https://www.linkedin.com/in/eric-tchindje/) 
 
-**Contact**: [datawithjay1@gmail.com](mailto:tchindjeeric61@gmail.com)
+**Contact**: [tchindjeeric61@gmail.com](mailto:tchindjeeric61@gmail.com)
