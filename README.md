@@ -88,7 +88,7 @@ real-time-stocks-pipeline/
 ### **2. Live Market Data Producer**
 - Developed **Python producer script** `stock_producer.py` to fetch **real-time stock prices** from the **Finnhub API** using an API key.
 - Streams stock data into Kafka in JSON format.
-- [Producer Code](producer/producer.py)
+
 
 ---
 
@@ -96,7 +96,7 @@ real-time-stocks-pipeline/
 - Built **Python consumer script** `stock_consumer.py` to consume streaming data from Kafka.
 - Stored consumed data into **MinIO buckets** (S3-compatible storage).
 - Organized storage into folders for **raw/bronze layer ingestion**.
-- [Consumer Code](consumer/consumer.py)
+
 
 ---
 
@@ -105,15 +105,14 @@ real-time-stocks-pipeline/
 - Created DAG (`stock_pipeline_dag.py`) to:
   - Load data from MinIO into **Snowflake staging tables** (Bronze).
   - Schedule automated runs every **1 minute**.
-- [Airflow DAGs](dag/minio_to_snowflake.py)
 
 ---
 
 ### **5. Snowflake Warehouse Setup**
 - Created **Snowflake database, schema, and warehouse**.
 - Defined staging tables for **Bronze → Silver → Gold** layers.
-- SQL scripts available at:
-  - [Snowflake Setup](snowflake/sql_init.sql)
+
+
 
 ---
 
