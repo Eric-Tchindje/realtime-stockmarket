@@ -1,0 +1,120 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.1
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://127.0.0.1:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:latest
+    container_name: kafdrop
+    depends_on:
+      - kafka
+    ports:
+      - "9000:9000"
+    environment:
+      KAFKA_BROKERCONNECT: kafka:9092
+
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9001"
+    ports:
+      - "9001:9001"
+      - "9002:9000"
+
+  postgres:
+    image: postgres:15
+    container_name: airflow-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  airflow-init:
+    image: apache/airflow:2.9.3
+    container_name: airflow-init
+    depends_on:
+      - postgres
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    entrypoint: /bin/bash
+    command: >
+      -c "
+      echo 'Waiting for PostgreSQL...' &&
+      sleep 10 &&
+      airflow db init &&
+      airflow db migrate &&
+      airflow users create --username ${AIRFLOW_ADMIN_USER} --firstname ${AIRFLOW_ADMIN_FIRSTNAME} --lastname ${AIRFLOW_ADMIN_LASTNAME} --role Admin --email ${AIRFLOW_ADMIN_EMAIL} --password ${AIRFLOW_ADMIN_PASSWORD} &&
+      echo '✅ Airflow DB initialized successfully.'"
+
+  airflow-webserver:
+    image: apache/airflow:2.9.3
+    container_name: airflow-webserver
+    restart: always
+    depends_on:
+      - airflow-init
+      - airflow-scheduler
+      - postgres
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - ./docker/dags:/opt/airflow/dags
+      - ./docker/logs:/opt/airflow/logs
+      - ./docker/plugins:/opt/airflow/plugins
+    ports:
+      - "8080:8080"
+    command: webserver
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.3
+    container_name: airflow-scheduler
+    restart: always
+    depends_on:
+      - airflow-init
+      - postgres
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+    volumes:
+      - ./docker/dags:/opt/airflow/dags
+      - ./docker/logs:/opt/airflow/logs
+      - ./docker/plugins:/opt/airflow/plugins
+    command: scheduler
+
+volumes:
+  postgres_data:

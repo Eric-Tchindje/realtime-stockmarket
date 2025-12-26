@@ -1,0 +1,55 @@
+# Python cache
+__pycache__/
+*.pyc
+**/__pycache__
+**/*.pyc
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# OS files
+.DS_Store
+
+# Logs
+logs/
+
+# Build / target
+**/target/
+
+# dbt
+**/dbt_packages
+
+# Environment files (exclude .env anywhere)
+.env
+**/.env
+
+# Python environments at any level
+**/.venv/
+**/venv/
+**/env/
+**/venv
+
+# Optional: Jupyter notebook checkpoints
+.ipynb_checkpoints/
+
+**/.dbt/
+
+docker-compose.override.yml
+logs/
+
+
+# GitHub Actions cache
+/.github/.cache
+
+# Docker cache
+docker/logs/
+docker/minio/
+docker/plugins/
+docker/postgres/
+
+# DBT cache
+dbt_stocks/.dbt/
+dbt_stocks/logs/
+dbt_stocks/target/

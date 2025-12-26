@@ -1,0 +1,8 @@
+version: 2
+sources:
+  - name: raw
+    database: STOCKS_DB
+    schema: BRONZE
+    tables:
+      - name: bronze_stock_quotes_raw
+        description: "Raw stock quotes data ingested from MinIO"
